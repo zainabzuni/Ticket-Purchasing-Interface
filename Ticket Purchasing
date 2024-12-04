@@ -1,0 +1,98 @@
+import tkinter as tk
+from tkinter import messagebox
+import pickle
+
+#ticket data
+TICKET_TYPES = [
+    {"type": "Single-Day Pass", "price": 275, "validity": "1 Day", "features": "Access to park for one day"},
+    {"type": "Two-Day Pass", "price": 480, "validity": "2 Days", "features": "Access for two consecutive days"},
+    {"type": "Annual Membership", "price": 1840, "validity": "1 Year", "features": "Unlimited park access for a year"},
+    {"type": "Child Ticket", "price": 185, "validity": "1 Day", "features": "Discounted for ages 3-12"},
+    {"type": "Group Ticket (10+)", "price": 220, "validity": "1 Day", "features": "Special rate for groups of 10 or more"},
+    {"type": "VIP Experience Pass", "price": 550, "validity": "1 Day", "features": "Expedited access and reserved seating"},
+]
+
+#save purchase orders to a binary file
+def save_order(order_data):
+    with open("orders.pkl", "ab") as file:
+        pickle.dump(order_data, file)
+
+#ticket purchasing GUI
+class TicketPurchasingApp:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Ticket Purchasing Interface")
+
+        #header
+        tk.Label(root, text="Adventure Land Tickets", font=("Arial", 16, "bold")).pack(pady=10)
+
+        #ticket selection
+        tk.Label(root, text="Select a Ticket:", font=("Arial", 14)).pack(anchor="w", padx=20)
+        self.ticket_var = tk.StringVar(value="Single-Day Pass")  # Default ticket
+        for ticket in TICKET_TYPES:
+            tk.Radiobutton(
+                root,
+                text=f"{ticket['type']} - {ticket['price']} DHS ({ticket['validity']})",
+                variable=self.ticket_var,
+                value=ticket["type"]
+            ).pack(anchor="w", padx=30)
+
+        #payment details
+        tk.Label(root, text="Payment Information:", font=("Arial", 14)).pack(anchor="w", padx=20, pady=10)
+        tk.Label(root, text="Name on Card:").pack(anchor="w", padx=30)
+        self.card_name = tk.Entry(root)
+        self.card_name.pack(anchor="w", padx=30)
+
+        tk.Label(root, text="Card Number:").pack(anchor="w", padx=30)
+        self.card_number = tk.Entry(root)
+        self.card_number.pack(anchor="w", padx=30)
+
+        tk.Label(root, text="Expiry Date (MM/YY):").pack(anchor="w", padx=30)
+        self.card_expiry = tk.Entry(root)
+        self.card_expiry.pack(anchor="w", padx=30)
+
+        tk.Label(root, text="CVV:").pack(anchor="w", padx=30)
+        self.card_cvv = tk.Entry(root, show="*")
+        self.card_cvv.pack(anchor="w", padx=30)
+
+        #buttons
+        tk.Button(root, text="Purchase", command=self.process_purchase, bg="green", fg="white").pack(pady=10)
+        tk.Button(root, text="Exit", command=root.quit, bg="red", fg="white").pack()
+
+    def process_purchase(self):
+        #collect data
+        ticket = self.ticket_var.get()
+        name = self.card_name.get()
+        card_number = self.card_number.get()
+        expiry = self.card_expiry.get()
+        cvv = self.card_cvv.get()
+
+        #validate fields
+        if not all([name, card_number, expiry, cvv]):
+            messagebox.showwarning("Incomplete", "Please fill in all fields.")
+            return
+
+        #save order
+        order_data = {
+            "ticket_type": ticket,
+            "name": name,
+            "card_number": card_number,
+            "expiry": expiry,
+            "cvv": cvv
+        }
+        save_order(order_data)
+        messagebox.showinfo("Success", f"Purchased: {ticket}")
+        self.reset_form()
+
+    def reset_form(self):
+        #clear inputs
+        self.card_name.delete(0, tk.END)
+        self.card_number.delete(0, tk.END)
+        self.card_expiry.delete(0, tk.END)
+        self.card_cvv.delete(0, tk.END)
+
+#run the app
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = TicketPurchasingApp(root)
+    root.mainloop()
